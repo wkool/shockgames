@@ -1,0 +1,400 @@
+<!doctype html>
+<html>
+<head>
+  <title>Harvard University HIT</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="jspsych/jspsych.js"></script>
+  <script src="jspsych/plugins/jspsych-text.js"></script>
+  <script src="jspsych/plugins/jspsych-full-stim.js"></script>
+  <script src="jspsych/plugins/jspsych-button-stim.js"></script>
+  <script src="jspsych/plugins/jspsych-door-stim.js"></script>
+  <script src="jspsych/plugins/jspsych-survey-text.js"></script>
+  <script src="jspsych/plugins/jspsych-html.js"></script>
+  <script src="jspsych/plugins/jspsych-instructions.js"></script>
+  <script src="jspsych/plugins/jspsych-call-function.js"></script>
+  <script src="additional-functions.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/black-tie/jquery-ui.min.css" rel="stylesheet" type="text/css"></link>
+  <link href="jspsych/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+</head>
+
+<body>
+</body>
+
+<script>
+  /*------------------------- SET UP VARIABLES -------------------------*/
+  var max = 3;
+  var min = 0;
+  var sd = 0.5;
+  
+  if (Math.random()<0.5){
+    var p_rews = [Math.ceil(Math.random()*max), Math.floor(Math.random()*min)];	
+  } else {
+    var p_rews = [Math.floor(Math.random()*min), Math.ceil(Math.random()*max)];	
+  }
+  if (Math.random()<0.5){
+    var rews = [Math.ceil(Math.random()*max), Math.floor(Math.random()*min)];	
+  } else {
+    var rews = [Math.floor(Math.random()*min), Math.ceil(Math.random()*max)];	
+  }
+  var gaussian = [];
+  for (i = 0; i < 1000; i++) {
+    gaussian[i] = createMemberInNormalDistribution(0,sd);
+  }
+  var num_button_trials = 5;
+  var num_door_trials = 7;
+  var num_p_trials = 15; 
+  var nrtrials = 125;
+  // set rewards for example buttons		  
+  var button_1_rews = [0, 0, 0, 1, 1];
+  var button_2_rews = [3, 3, 2, 1, 1];
+		  
+  // randomly set faces to be used
+  var p_faces = [7, 8]; 
+  var p_face = jsPsych.randomization.sample(p_faces, 1, false);
+  var faces = [1, 2, 3, 4, 5, 6]; 
+  var face = jsPsych.randomization.sample(faces, 1, false);		 
+
+  var colors = [1,2];
+  var color = jsPsych.randomization.sample(colors, 1, false);	 
+  var sex = '';
+  var age = 0;
+  var score = 0;
+
+  var show_reminder = false;
+  yellow_ctr = 0;
+  yellow_error = 0;
+  green_ctr = 0;
+  green_error = 0;
+  /*------------------------- SET UP JSPSYCH BLOCKS -------------------------*/
+		
+  var change_colors = {
+    type: 'call-function',
+    func: function(){ 
+      $('.jspsych-display-element').css('background-color', 'white');
+      $('.jspsych-display-element').css('color', 'black');
+    }
+  }
+		  
+  var subid = '';
+  var id_question = ["Worker ID:"];
+  var id_block = {
+    type: 'survey-text',
+    questions: [id_question],
+    preamble:["<div align=center><b>Please enter your Amazon Mechanical Turk Worker ID below.</b><br>(If you do not enter it accurately, we will not be able to pay you.)</div>"],
+  };
+  var check_id_block = { 
+    chunk_type: 'while', 
+    timeline: [id_block], 
+    continue_function: function(data){ 
+      answers = data[0].responses.split(":"); 
+      id = answers[1].split('"')[1];
+      if(id) { 
+        subid = id;
+        id_trial = new Array(1);
+        id_trial[0] = { subid: subid }
+	return false; 
+      } else {
+        alert("Please provide your Amazon Mechanical Turk Worker ID."); 
+        return true; 
+      }
+    },
+    timing_post_trial: 0,
+  };
+  var check_consent = function(elem) {
+    if ($('#consent_checkbox').is(':checked')) {
+      return true;
+    }
+    else {
+      alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
+      return false;
+    }
+    return false; //???
+  };
+  var consent_block = {
+    type:'html',
+    pages: [{url: "consent.html", cont_btn: "start", check_fn: check_consent}],
+    on_finish: function(data){
+      start_instructions = data.time_elapsed;
+    }
+  };
+  /*------------------------- INSTRUCTIONS -------------------------*/
+ 
+  var instructions_1a_block = {
+    type: "instructions", pages: instructions_1a_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  var instructions_1b_block = {
+    type: "instructions", pages: instructions_1b_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  var instructions_1c_block = {
+    type: "instructions", pages: instructions_1c_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  var instructions_1d_block = {
+    type: "instructions", pages: instructions_1d_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  var instructions_1e_block = {
+    type: "instructions", pages: instructions_1e_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  var instructions_2_block = {
+    type: "instructions", pages: instructions_2_text(),
+    key_forward: "j", key_backward: "f", show_clickable_nav: true,
+  }
+  /*------------------------- BUTTON PRACTICE -------------------------*/
+  var button_1_practice_block = {
+    type: "button-stim",
+    choices: "space",
+    rews: function() {
+      return button_1_rews.splice(0,1)
+    },
+    timing_post_trial: 0,
+    nrtrials: num_button_trials,
+    face: p_face,
+  };
+  var button_2_practice_block = {
+    type: "button-stim",
+    choices: "space", 
+    rews: function() {
+      return button_2_rews.splice(0,1)
+     },
+    timing_post_trial: 0,
+    nrtrials: num_button_trials,
+    state_name: "yellow",
+    face: p_face, 
+  };
+  /*-------------------------DOOR PRACTICE-------------------------*/
+  var door_practice_block = {
+    type: "door-stim",
+    choices: ["F","J"],
+    timing_post_trial: 0,
+    nrtrials: 1, //num_door_trials,
+  };
+  var reminder_1_block = {
+    type: "text",
+    text: reminder_1_block_text(),
+  };
+  var reminder_1_if = {
+    chunk_type: 'if',
+    timeline: [reminder_1_block],
+    conditional_function: function(){
+      return show_reminder;
+    }
+  };
+  var door_1_while_block = {
+    chunk_type: 'while',
+    timeline: [reminder_1_if, door_practice_block],
+    continue_function: function(data){
+      var door_data = jsPsych.data.getTrialsOfType("door-stim");
+      var last_trial = door_data[door_data.length-1];
+
+      if (last_trial.state2==2) { //yellow door chosen
+        yellow_ctr = 0;
+        yellow_error = yellow_error + 1;
+      } else {
+        yellow_ctr = yellow_ctr + 1;
+      }
+
+      if (yellow_error==3){
+        yellow_error = 0;
+        show_reminder = true;
+      } else {
+        show_reminder = false;
+      }
+
+      if (yellow_ctr==7){
+        return false
+      } else {
+        return true
+      }
+    }
+  };
+
+  var reminder_2_block = {
+    type: "text",
+    text: reminder_2_block_text(),
+  };
+  var reminder_2_if = {
+    chunk_type: 'if',
+    timeline: [reminder_2_block],
+    conditional_function: function(){
+      return show_reminder;
+    }
+  };
+  var door_2_while_block = {
+    chunk_type: 'while',
+    timeline: [reminder_2_if, door_practice_block],
+    continue_function: function(data){
+      var door_data = jsPsych.data.getTrialsOfType("door-stim");
+      var last_trial = door_data[door_data.length-1];
+
+      if (last_trial.state2==1) {
+        green_ctr = 0;
+        green_error = green_error + 1;
+        console.log("green_error")
+        console.log(green_error)
+      } else {
+        green_ctr = green_ctr + 1;
+        console.log("green_ctr")
+        console.log(green_ctr)
+      }
+
+      if (green_error==3){
+        console.log("green_error in =3 loop")
+        console.log(green_error)
+        green_error = 0;
+        show_reminder = true;
+      } else {
+        show_reminder = false;
+      }
+
+      if (green_ctr==7){
+        return false
+      } else {
+        return true
+      }
+    }
+  };
+  
+  /*------------------------- FULL GAME PRACTICE -------------------------*/
+  var practice_block = {
+    type: "full-stim",
+    rews: function() { 
+      alldata = jsPsych.data.getTrialsOfType("full-stim");
+      if (alldata.length==0) {
+	return p_rews
+      } else {
+	for (j = 0; j < 2; j++) {
+	  g = Math.round(gaussian[Math.floor(Math.random()*gaussian.length)]);
+	  p_rews[j] = p_rews[j]+g;
+	  p_rews[j] = Math.min(p_rews[j],Math.max(max*2 - p_rews[j], min));
+	  p_rews[j] = Math.max(p_rews[j], Math.min(min*2 - p_rews[j], max));
+	}
+	return p_rews
+      }
+    },
+    timing_post_trial: 0,
+    practice: 1,
+    timing_response: -1,
+    nrtrials: num_p_trials,
+    face: function(){ return p_face },
+    subid: function(){ return subid },
+    color: function(){ return colors }
+  };
+  /*------------------------- FULL GAME -------------------------*/
+  var game_block = {
+    type: "full-stim",
+    rews: function() {
+      var alldata = jsPsych.data.getTrialsOfType("full-stim"); 
+      if (alldata.length==num_p_trials) {
+	return rews
+      } else {
+	for (j = 0; j < 2; j++) {
+	  g = Math.round(gaussian[Math.floor(Math.random() * gaussian.length)]);
+	  rews[j] = rews[j]+g;
+	  rews[j] = Math.min(rews[j], Math.max(max*2 - rews[j], min));
+	  rews[j] = Math.max(rews[j], Math.min(min*2 - rews[j], max));
+	}
+	return rews
+      }
+    },
+    timing_post_trial: 0,
+    timing_response: 2000,
+    nrtrials: nrtrials,
+    face: function(){ return face },
+    subid: function(){ return subid },
+    color: function(){ return color } 
+  };
+			
+  /*------------------------- SAVE DATA -------------------------*/
+  var save_data_block = {
+    type: 'call-function',
+    func: function(){
+      save_data(jsPsych.data.getTrialsOfType("full-stim"),"shockgame_kool_data");
+    }
+  };
+  var demographics_block = {
+    type: "survey-text", 
+    preamble: ["Please provide us with some information about yourself:"], 
+    questions: [["What is your age?", "What is your gender?"]],
+  };
+  var check_demographics_block = { 
+    chunk_type: 'while', 
+    timeline: [demographics_block], 
+    continue_function: function(data){ 
+      answers = data[0].responses.split(":"); 
+      age_ans = answers[1].split('"')[1]; 
+      sex_ans = answers[2].split('"')[1];
+	
+      if (jQuery.isNumeric(age_ans) && (sex_ans)){ 
+	age = parseInt(age_ans);
+	sex = sex_ans;
+      } else { 
+	if (!jQuery.isNumeric(age_ans)) 
+	  alert("You entered your age incorrectly. Please enter your age as a number (make sure to remove any spaces).");
+	if (!sex_ans) 
+	  alert("Please enter your gender (male, female, other)."); 
+	return true; 
+      }
+    },
+    timing_post_trial: 0,
+  };
+  var save_subinfo_block = {
+    type: 'call-function',
+    func: function(){
+      var lasttrialdata = jsPsych.data.getLastTrialData();
+      subinfo = new Array(1);
+      subinfo[0] = {
+	    subid: subid,
+	    age: age,
+	    sex: sex,
+	    time_elapsed: lasttrialdata.time_elapsed,
+      };
+      save_data(subinfo,"shockgame_kool_subinfo");
+    }
+  };
+  var debriefing_block = {
+    type:'html',
+    pages: [{url: "debriefing.html", cont_btn: "continue"}]
+  };
+  var end_block = {
+    type: 'html',
+    pages: [{url: "end.html"}]
+  };
+  /*---------------------- EXPERIMENT DEFINITION ARRAY ----------------------*/
+  var experiment = []; // timeline 
+  experiment.push(change_colors);
+  experiment.push(check_id_block);
+  experiment.push(consent_block);
+  experiment.push(instructions_1a_block);
+  experiment.push(button_1_practice_block);
+  experiment.push(instructions_1b_block);
+  experiment.push(button_2_practice_block);
+  experiment.push(instructions_1c_block);
+  experiment.push(door_1_while_block);
+  experiment.push(instructions_1d_block);
+  experiment.push(door_2_while_block);
+  experiment.push(instructions_1e_block);
+  experiment.push(practice_block);
+  experiment.push(instructions_2_block);
+  experiment.push(game_block);		     
+  experiment.push(save_data_block); 
+  experiment.push(check_demographics_block);
+  experiment.push(save_subinfo_block);
+  experiment.push(debriefing_block);
+  experiment.push(end_block);
+  /*------------------------- PRELOAD IMAGES -------------------------*/
+  jsPsych.preloadImages(images, function(){ 
+    startExperiment(); 
+  });
+  /*------------------------- START EXPERIMENT -------------------------*/
+  function startExperiment(){
+    jsPsych.init({
+      experiment_structure: experiment,
+    });
+  }
+</script>
+</html>
