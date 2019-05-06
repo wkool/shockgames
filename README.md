@@ -1,6 +1,8 @@
 # shockgame
 Moral versions of the Daw and Kool two-step tasks
 
+Stephanie Campbell, based on code written by Wouter Kool
+
 These directories contain the code for running the doors-and-buttons versions of the Daw and Kool two-step paradigms online.
 
 Both experiments have been written using Josh deLeeuw's jsPsych toolbox (http://www.jspsych.org/).
