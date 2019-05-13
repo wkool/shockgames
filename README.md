@@ -1,7 +1,7 @@
 # shockgame
 Moral versions of the Daw and Kool two-step tasks
 
-This code has been written by *Stephanie Campbell*, based on code by Wouter Kool
+This code has been written by <b>Stephanie Campbell</b>, based on code by Wouter Kool.
 
 These directories contain the code for running the doors-and-buttons versions of the Daw and Kool two-step paradigms online.
 
